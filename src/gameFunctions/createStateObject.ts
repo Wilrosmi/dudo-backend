@@ -18,10 +18,14 @@ export default function createStateObject(): IState {
       dice: { [socketID]: [0, 0, 0, 0, 0] },
       turn: 0,
       order: [socketID],
-      bid: [0, 0],
+      bid: {
+        maker: "",
+        value: [0, 0],
+      },
       players: {
         [socketID]: username,
       },
+      started: false,
     };
     stateObject[gameID] = newGame;
   }
@@ -34,6 +38,10 @@ export default function createStateObject(): IState {
     stateObject[gameID].dice[socketID] = [0, 0, 0, 0, 0];
     stateObject[gameID].order.push(socketID);
     stateObject[gameID].players[socketID] = username;
+  }
+
+  function startGame(gameID: string) {
+    stateObject[gameID].started = true;
   }
 
   function rollDice(gameID: string): void {
@@ -50,7 +58,10 @@ export default function createStateObject(): IState {
     stateObject[gameID].dice[socketID].pop();
   }
 
-  function updateBid(gameID: string, newBid: [number, number]): void {
+  function updateBid(
+    gameID: string,
+    newBid: { maker: string; value: [number, number] }
+  ): void {
     stateObject[gameID].bid = newBid;
   }
 
@@ -69,14 +80,23 @@ export default function createStateObject(): IState {
     return outputArray;
   }
 
-  function removePlayerFromGame(gameID: string, playerID: string): void {
+  function removePlayerFromGame(
+    gameID: string,
+    playerID: string,
+    lookup: Record<string, string>
+  ): void {
     const game = stateObject[gameID];
     delete game.dice[playerID];
+    delete lookup[playerID];
     const indexOfLoser = game.order.indexOf(playerID);
     if (indexOfLoser < game.turn) {
       game.turn--;
     }
     game.order.splice(indexOfLoser, 1);
+  }
+
+  function endGame(gameID: string): void {
+    delete stateObject[gameID];
   }
 
   return {
@@ -89,5 +109,7 @@ export default function createStateObject(): IState {
     updateBid,
     updateTurn,
     removePlayerFromGame,
+    startGame,
+    endGame,
   };
 }
