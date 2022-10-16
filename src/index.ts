@@ -96,16 +96,20 @@ io.on("connection", (socket: Socket) => {
   socket.on("decision", (message: IDecision) => {
     handleDecision(message, allGameState, io, socketToGameLookup);
     const state = allGameState.viewGame(message.gameID);
-    for (const id in state.players) {
-      io.to(id).emit("nextTurn", { state: getUsersGameState(state, id) });
-    }
+    try {
+      for (const id in state.players) {
+        io.to(id).emit("nextTurn", { state: getUsersGameState(state, id) });
+      }
+    } catch {}
   });
 
   socket.on("disconnect", () => {
-    const gameID = socketToGameLookup[socket.id];
-    const username = allGameState.viewGame(gameID).players[socket.id];
-    socket.emit("playerDisconnected", { player: username });
-    handleDisconnect(gameID, socket.id, allGameState, io, socketToGameLookup);
+    try {
+      const gameID = socketToGameLookup[socket.id];
+      const username = allGameState.viewGame(gameID).players[socket.id];
+      socket.emit("playerDisconnected", { player: username });
+      handleDisconnect(gameID, socket.id, allGameState, io, socketToGameLookup);
+    } catch {}
   });
 });
 
